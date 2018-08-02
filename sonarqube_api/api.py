@@ -25,6 +25,10 @@ class SonarAPIHandler(object):
     RULES_ACTIVATION_ENDPOINT = '/api/qualityprofiles/activate_rule'
     RULES_LIST_ENDPOINT = '/api/rules/search'
     RULES_CREATE_ENDPOINT = '/api/rules/create'
+    USERS_LIST_ENDPOINT = '/api/users/search'
+    USERS_CREATE_ENDPOINT = '/api/users/create'
+    USERS_UPDATE_ENDPOINT = '/api/users/update'
+    USERS_DEACTIVATE_ENDPOINT = '/api/users/deactivate'
 
     # Debt data params (characteristics and metric)
     DEBT_CHARACTERISTICS = (
@@ -373,3 +377,90 @@ class SonarAPIHandler(object):
         """
         res = self._make_call('get', self.AUTH_VALIDATION_ENDPOINT).json()
         return res.get('valid', False)
+
+    def get_users(self, logins=None, include_deactivated=False):
+        """
+        Get all the active users of the SonarQube instance
+
+        :param logins: comma-separated list of user logins
+        :param include_deactivated: include deactivated users
+        :return: request response
+        """
+
+        # Build parameters
+        params = {
+            'includeDeactivated': include_deactivated
+        }
+        if logins:
+            params['logins'] = logins
+
+        # Make call and return response
+        res = self._make_call('post', self.USERS_LIST_ENDPOINT, **params)
+        return res
+
+    def create_user(self, login, password, name, email=None):
+        """
+        Create a user
+
+        :param login: user login
+        :param password: user password
+        :param name: user name
+        :param email: user email
+        :return: request response
+        """
+
+        # Build parameters
+        params = {
+            'login': login,
+            'password': password,
+            'name': name,
+            'password_confirmation': password
+        }
+
+        if email:
+            params['email'] = email
+
+        # Make call and return response
+        res = self._make_call('post', self.USERS_CREATE_ENDPOINT, **params)
+        return res
+
+    def update_user(self, login, name=None, email=None):
+        """
+        Update a user
+
+        :param login: user login
+        :param name: user name
+        :param email: user email
+        :return: request response
+        """
+
+        # Build parameters
+        params = {
+            'login': login
+        }
+
+        if name:
+            params['neme'] = name
+        if email:
+            params['email'] = email
+
+        # Make call and return response
+        res = self._make_call('post', self.USERS_UPDATE_ENDPOINT, **params)
+        return res
+
+    def deactivate_user(self, login):
+        """
+        Deactivate a user
+
+        :param login: user login
+        :return: request response
+        """
+
+        # Build parameters
+        params = {
+            'login': login
+        }
+
+        # Make call and return response
+        res = self._make_call('post', self.USERS_DEACTIVATE_ENDPOINT, **params)
+        return res

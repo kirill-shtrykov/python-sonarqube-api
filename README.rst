@@ -77,6 +77,10 @@ The methods supported by the SonarAPIHandler are:
 * ``get_resources_metrics``: yield projects with some general metrics
 * ``get_resources_full_data``: yield projects with their general metrics and technical debt by category (merge of previous two methods)
 * ``validate_authentication``: validate authentication credentials
+* ``get_users``: get all the active users of the SonarQube instance
+* ``create_user``: create a user
+* ``update_user``: update a user
+* ``deactivate_user``: deactivate a user
 
 Commands
 --------
@@ -150,3 +154,11 @@ For the complete set of export options run::
 
     migrate-sonarqube-rules -h
 
+Manage Users
+~~~~~~~~~~~~
+
+The command ``sonarqube-users`` manages a users. Supports following calls:
+* ``list``: get all the active users of the SonarQube instance
+* ``create``: create a user
+* ``update``: update a user
+* ``deactivate``: deactivate a user

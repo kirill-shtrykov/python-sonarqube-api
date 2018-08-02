@@ -2,6 +2,7 @@ __author__ = 'kako'
 
 from io import StringIO
 from unittest import TestCase
+import argparse
 
 try:
     from unittest import mock
@@ -9,7 +10,7 @@ except ImportError:
     import mock
 
 from sonarqube_api.api import SonarAPIHandler
-from sonarqube_api.cmd import activate_rules, export_rules, migrate_rules
+from sonarqube_api.cmd import activate_rules, export_rules, migrate_rules, users
 
 
 GET_RULES_DATA = [
@@ -221,3 +222,48 @@ class ActivateRulesTest(TestCase):
 
         # Check stdout write: 3 exported and 1 failed
         stdout_mock.write.assert_called_once_with('Complete rules activation: 6 activated and 1 failed.\n')
+
+
+class UsersTest(TestCase):
+    def setUp(self):
+        self.host = 'http://localhost'
+        self.port = '9000'
+        self.user = 'admin'
+        self.password = 'admin'
+        self.user_login = 'cli_user'
+
+    @mock.patch('sonarqube_api.cmd.users.argparse.ArgumentParser.parse_args')
+    def test_main_list(self, parse_mock):
+        # Set call arguments for list
+        parse_mock.return_value = argparse.Namespace(
+            host=self.host, port=self.port, user=self.user, password=self.password, authtoken=None, basepath=None,
+            command='list', deactivated=False, logins=None
+        )
+        users.main()
+
+    @mock.patch('sonarqube_api.cmd.users.argparse.ArgumentParser.parse_args')
+    def test_main_create(self, parse_mock):
+        # Set call arguments for create
+        parse_mock.return_value = argparse.Namespace(
+            host=self.host, port=self.port, user=self.user, password=self.password, authtoken=None, basepath=None,
+            command='create', login=self.user_login, user_pass="qwerty", name="User From CLI", email=None
+        )
+        users.main()
+
+    @mock.patch('sonarqube_api.cmd.users.argparse.ArgumentParser.parse_args')
+    def test_main_update(self, parse_mock):
+        # Set call arguments for update
+        parse_mock.return_value = argparse.Namespace(
+            host=self.host, port=self.port, user=self.user, password=self.password, authtoken=None, basepath=None,
+            command='update', login=self.user_login, name=None, email="cli_user@example.com"
+        )
+        users.main()
+
+    @mock.patch('sonarqube_api.cmd.users.argparse.ArgumentParser.parse_args')
+    def test_main_deactivate(self, parse_mock):
+        # Set call arguments for deactivate
+        parse_mock.return_value = argparse.Namespace(
+            host=self.host, port=self.port, user=self.user, password=self.password, authtoken=None, basepath=None,
+            command='deactivate', login=self.user_login
+        )
+        users.main()

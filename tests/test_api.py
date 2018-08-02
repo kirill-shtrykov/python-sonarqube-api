@@ -327,3 +327,28 @@ class SonarAPIHandlerTest(TestCase):
             characteristics='TESTABILITY,MAINTAINABILITY',
             qualifiers='TRK,BRC'
         )
+
+
+class TestUsers(TestCase):
+    def setUp(self):
+        self.sonar = SonarAPIHandler(user='admin', password='admin')
+        self.test_user = "user1"
+
+    def test_get_users(self):
+        users = self.sonar.get_users().json()
+        self.assertIn('users', users)
+
+    def test_create_user(self):
+        temp_pass = "qwerty"
+        username = "User 1"
+        res = self.sonar.create_user(self.test_user, temp_pass, name=username).json()
+        self.assertIn('user', res)
+
+    def test_update_user(self):
+        temp_email = "user1@example.com"
+        res = self.sonar.update_user(self.test_user, email=temp_email).json()
+        self.assertEqual(res['user']['email'], temp_email)
+
+    def test_deactivate_user(self):
+        res = self.sonar.deactivate_user(self.test_user).json()
+        self.assertFalse(res['user']['active'])
