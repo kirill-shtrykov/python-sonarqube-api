@@ -164,6 +164,7 @@ Manage Users
 ~~~~~~~~~~~~
 
 The command ``sonarqube-users`` manages a users. Supports following calls:
+
 * ``list``: get all the active users of the SonarQube instance
 * ``create``: create a user
 * ``update``: update a user
@@ -173,6 +174,7 @@ Manage Groups
 ~~~~~~~~~~~~~
 
 The command ``sonarqube-groups`` manages a groups. Supports following calls:
+
 * ``list``: search for user groups
 * ``create``: create a group
 * ``update``: update a group
