@@ -3,6 +3,7 @@ __author__ = 'kako'
 from io import StringIO
 from unittest import TestCase
 import argparse
+import uuid
 
 try:
     from unittest import mock
@@ -10,7 +11,7 @@ except ImportError:
     import mock
 
 from sonarqube_api.api import SonarAPIHandler
-from sonarqube_api.cmd import activate_rules, export_rules, migrate_rules, users
+from sonarqube_api.cmd import activate_rules, export_rules, migrate_rules, users, groups
 
 
 GET_RULES_DATA = [
@@ -230,40 +231,135 @@ class UsersTest(TestCase):
         self.port = '9000'
         self.user = 'admin'
         self.password = 'admin'
-        self.user_login = 'cli_user'
+        self.user_login = str(uuid.uuid1())
 
     @mock.patch('sonarqube_api.cmd.users.argparse.ArgumentParser.parse_args')
-    def test_main_list(self, parse_mock):
+    def test_cmd_list_users(self, parse_mock):
         # Set call arguments for list
         parse_mock.return_value = argparse.Namespace(
-            host=self.host, port=self.port, user=self.user, password=self.password, authtoken=None, basepath=None,
+            host=self.host, port=self.port, user=self.user,
+            password=self.password, authtoken=None, basepath=None,
             command='list', deactivated=False, logins=None
         )
         users.main()
 
     @mock.patch('sonarqube_api.cmd.users.argparse.ArgumentParser.parse_args')
-    def test_main_create(self, parse_mock):
+    def test_cmd_create_update_deactivate_user(self, parse_mock):
         # Set call arguments for create
         parse_mock.return_value = argparse.Namespace(
-            host=self.host, port=self.port, user=self.user, password=self.password, authtoken=None, basepath=None,
-            command='create', login=self.user_login, user_pass="qwerty", name="User From CLI", email=None
+            host=self.host, port=self.port, user=self.user,
+            password=self.password, authtoken=None, basepath=None,
+            command='create', login=self.user_login, user_pass="qwerty",
+            name="User From CLI", email=None
         )
         users.main()
 
-    @mock.patch('sonarqube_api.cmd.users.argparse.ArgumentParser.parse_args')
-    def test_main_update(self, parse_mock):
         # Set call arguments for update
         parse_mock.return_value = argparse.Namespace(
-            host=self.host, port=self.port, user=self.user, password=self.password, authtoken=None, basepath=None,
-            command='update', login=self.user_login, name=None, email="cli_user@example.com"
+            host=self.host, port=self.port, user=self.user,
+            password=self.password, authtoken=None, basepath=None,
+            command='update', login=self.user_login, name=None,
+            email="cli_user@example.com"
         )
         users.main()
 
-    @mock.patch('sonarqube_api.cmd.users.argparse.ArgumentParser.parse_args')
-    def test_main_deactivate(self, parse_mock):
         # Set call arguments for deactivate
         parse_mock.return_value = argparse.Namespace(
-            host=self.host, port=self.port, user=self.user, password=self.password, authtoken=None, basepath=None,
+            host=self.host, port=self.port, user=self.user,
+            password=self.password, authtoken=None, basepath=None,
             command='deactivate', login=self.user_login
         )
         users.main()
+
+
+class GroupsTest(TestCase):
+    def setUp(self):
+        self.host = 'http://localhost'
+        self.port = '9000'
+        self.user = 'admin'
+        self.password = 'admin'
+        self.test_group = str(uuid.uuid1())
+        username = str(uuid.uuid1())
+        self.sonar = SonarAPIHandler(user=self.user, password=self.password)
+        self.test_user = self.sonar.create_user(
+            username,
+            'qwerty',
+            username,
+            "{}@example.com".format(username)
+        ).json().get('user')
+
+    # List
+    @mock.patch('sonarqube_api.cmd.users.argparse.ArgumentParser.parse_args')
+    def test_cmd_list_groups(self, parse_mock):
+        parse_mock.return_value = argparse.Namespace(
+            host=self.host, port=self.port, user=self.user,
+            password=self.password, authtoken=None, basepath=None,
+            command='list', fields=None, query=None
+        )
+        groups.main()
+
+    # Create
+    @mock.patch('sonarqube_api.cmd.users.argparse.ArgumentParser.parse_args')
+    def test_cmd_create_group(self, parse_mock):
+        parse_mock.return_value = argparse.Namespace(
+            host=self.host, port=self.port, user=self.user,
+            password=self.password, authtoken=None, basepath=None,
+            command='create', name=self.test_group, description=None
+        )
+        groups.main()
+
+    # Update and delete
+    @mock.patch('sonarqube_api.cmd.users.argparse.ArgumentParser.parse_args')
+    def test_cmd_update_delete_group(self, parse_mock):
+        res = self.sonar.create_group(str(uuid.uuid1())).json()
+        parse_mock.return_value = argparse.Namespace(
+            host=self.host, port=self.port, user=self.user,
+            password=self.password, authtoken=None, basepath=None,
+            command='update', gid=res['group']['id'],
+            name=None, description='Awesome group'
+        )
+        groups.main()
+
+        parse_mock.return_value = argparse.Namespace(
+            host=self.host, port=self.port, user=self.user,
+            password=self.password, authtoken=None, basepath=None,
+            command='delete', gid=res['group']['id'], name=None
+        )
+        groups.main()
+
+    # Add and remove user
+    @mock.patch('sonarqube_api.cmd.users.argparse.ArgumentParser.parse_args')
+    def test_cmd_add_remove_user_group(self, parse_mock):
+        res = self.sonar.create_group(str(uuid.uuid1())).json()
+        parse_mock.return_value = argparse.Namespace(
+            host=self.host, port=self.port, user=self.user,
+            password=self.password, authtoken=None, basepath=None,
+            command='add-user', login=self.test_user['login'],
+            name=res['group']['name'], gid=None
+        )
+        groups.main()
+
+        parse_mock.return_value = argparse.Namespace(
+            host=self.host, port=self.port, user=self.user,
+            password=self.password, authtoken=None, basepath=None,
+            command='remove-user', login=self.test_user['login'],
+            name=res['group']['name'], gid=None
+        )
+        groups.main()
+        self.sonar.delete_group(name=res['group']['name'])
+
+    # List users
+    @mock.patch('sonarqube_api.cmd.users.argparse.ArgumentParser.parse_args')
+    def test_cmd_list_users_group(self, parse_mock):
+        res = self.sonar.create_group(str(uuid.uuid1())).json()
+        self.sonar.add_user_group(self.test_user['login'],
+                                  name=res['group']['name'])
+        parse_mock.return_value = argparse.Namespace(
+            host=self.host, port=self.port, user=self.user,
+            password=self.password, authtoken=None, basepath=None,
+            command='list-users', name=res['group']['name'],
+            gid=None, query=None
+        )
+        groups.main()
+        self.sonar.delete_group(name=res['group']['name'])
+

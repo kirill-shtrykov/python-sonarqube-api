@@ -20,7 +20,7 @@ setup(
     name='sonarqube_api',
 
     # https://packaging.python.org/en/latest/single_source_version.html
-    version='1.3.2',
+    version='1.3.3',
 
     description='SonarQube API Handler',
     long_description=long_description,
@@ -65,7 +65,8 @@ setup(
             'activate-sonarqube-rules=sonarqube_api.cmd.activate_rules:main',
             'export-sonarqube-rules=sonarqube_api.cmd.export_rules:main',
             'migrate-sonarqube-rules=sonarqube_api.cmd.migrate_rules:main',
-            'sonarqube-users=sonarqube_api.cmd.users:main'
+            'sonarqube-users=sonarqube_api.cmd.users:main',
+            'sonarqube-groups=sonarqube_api.cmd.groups:main'
         ],
     },
 

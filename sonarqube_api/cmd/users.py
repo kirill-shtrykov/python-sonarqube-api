@@ -6,7 +6,7 @@ from prettytable import PrettyTable
 from sonarqube_api.api import SonarAPIHandler
 
 
-parser = argparse.ArgumentParser(description='Export rules from a SonarQube server')
+parser = argparse.ArgumentParser(description='Manage users on a SonarQube server')
 
 # Connection arguments
 parser.add_argument('--host', dest='host', type=str,
@@ -31,23 +31,23 @@ parser.add_argument('--basepath', dest='basepath', type=str,
 # User management arguments
 commands = parser.add_subparsers(help='commands', dest='command')
 # List
-user_list = commands.add_parser("list", help="Get all the active users of the SonarQube instance")
-user_list.add_argument("--deactivated", action='store_true', help="Include deactivated users")
-user_list.add_argument("--logins", help="comma-separated list of user logins")
+users_list = commands.add_parser("list", help="Get all the active users of the SonarQube instance")
+users_list.add_argument("--deactivated", action='store_true', help="Include deactivated users")
+users_list.add_argument("--logins", help="comma-separated list of user logins")
 # Create
-user_create = commands.add_parser("create", help="Create a user")
-user_create.add_argument("login", help="User login")
-user_create.add_argument("user_pass", help="User password")
-user_create.add_argument("name", help="User name")
-user_create.add_argument("--email", help="User email")
+users_create = commands.add_parser("create", help="Create a user")
+users_create.add_argument("login", help="User login")
+users_create.add_argument("user_pass", help="User password")
+users_create.add_argument("name", help="User name")
+users_create.add_argument("--email", help="User email")
 # Update
-user_update = commands.add_parser("update", help="Update a user")
-user_update.add_argument("login", help="User login")
-user_update.add_argument("--name", help="User name")
-user_update.add_argument("--email", help="User email")
+users_update = commands.add_parser("update", help="Update a user")
+users_update.add_argument("login", help="User login")
+users_update.add_argument("--name", help="User name")
+users_update.add_argument("--email", help="User email")
 # Deactivate
-user_deactivate = commands.add_parser("deactivate", help="Deactivate a user")
-user_deactivate.add_argument("login", help="User login")
+users_deactivate = commands.add_parser("deactivate", help="Deactivate a user")
+users_deactivate.add_argument("login", help="User login")
 
 
 def main():

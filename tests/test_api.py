@@ -1,5 +1,7 @@
 __author__ = 'claudio.melendrez'
 
+import uuid
+
 from unittest import TestCase
 
 try:
@@ -332,23 +334,57 @@ class SonarAPIHandlerTest(TestCase):
 class TestUsers(TestCase):
     def setUp(self):
         self.sonar = SonarAPIHandler(user='admin', password='admin')
-        self.test_user = "user1"
+        self.test_user = str(uuid.uuid1())
 
     def test_get_users(self):
         users = self.sonar.get_users().json()
         self.assertIn('users', users)
 
-    def test_create_user(self):
-        temp_pass = "qwerty"
-        username = "User 1"
-        res = self.sonar.create_user(self.test_user, temp_pass, name=username).json()
+    def test_create_update_deactivate_user(self):
+        res = self.sonar.create_user(self.test_user, 'qwerty', name=self.test_user).json()
         self.assertIn('user', res)
-
-    def test_update_user(self):
-        temp_email = "user1@example.com"
-        res = self.sonar.update_user(self.test_user, email=temp_email).json()
-        self.assertEqual(res['user']['email'], temp_email)
-
-    def test_deactivate_user(self):
+        email = "{}@example.com".format(self.test_user)
+        res = self.sonar.update_user(self.test_user, email=email).json()
+        self.assertEqual(res['user']['email'], email)
         res = self.sonar.deactivate_user(self.test_user).json()
         self.assertFalse(res['user']['active'])
+
+
+class TestGroups(TestCase):
+    def setUp(self):
+        self.sonar = SonarAPIHandler(user='admin', password='admin')
+        username = str(uuid.uuid1())
+        self.test_user = self.sonar.create_user(
+            username,
+            'qwerty',
+            username,
+            "{}@example.com".format(username)
+        ).json().get('user')
+
+    def test_get_groups(self):
+        groups = self.sonar.get_groups().json()
+        self.assertIn('groups', groups)
+
+    def test_create_update_delete_group(self):
+        test_group = str(uuid.uuid1())
+        res = self.sonar.create_group(test_group).json()
+        self.assertIn('group', res)
+        res = self.sonar.update_group(gid=res['group']['id'], description="This is test group").json()
+        self.assertIn('description', res['group'])
+        res = self.sonar.delete_group(name=test_group)
+        self.assertEqual(res.status_code, 204)
+
+    def test_add_remove_user_group(self):
+        test_group = str(uuid.uuid1())
+        res = self.sonar.create_group(test_group).json()
+        self.assertIn('group', res)
+        res = self.sonar.add_user_group(self.test_user['login'], name=test_group)
+        self.assertEqual(res.status_code, 204)
+        res = self.sonar.get_group_users(name=test_group).json()
+        self.assertIn('users', res)
+
+        with self.assertRaises(ValidationError):
+            self.sonar.get_group_users()
+
+        res = self.sonar.remove_user_group(self.test_user['login'], name=test_group)
+        self.assertEqual(res.status_code, 204)

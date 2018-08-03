@@ -29,6 +29,13 @@ class SonarAPIHandler(object):
     USERS_CREATE_ENDPOINT = '/api/users/create'
     USERS_UPDATE_ENDPOINT = '/api/users/update'
     USERS_DEACTIVATE_ENDPOINT = '/api/users/deactivate'
+    GROUPS_LIST_ENDPOINT = '/api/user_groups/search'
+    GROUPS_CREATE_ENDPOINT = '/api/user_groups/create'
+    GROUPS_UPDATE_ENDPOINT = '/api/user_groups/update'
+    GROUPS_DELETE_ENDPOINT = '/api/user_groups/delete'
+    GROUPS_ADDUSER_ENDPOINT = '/api/user_groups/add_user'
+    GROUPS_REMOVEUSER_ENDPOINT = '/api/user_groups/remove_user'
+    GROUPS_USERS_ENDPOINT = '/api/user_groups/users'
 
     # Debt data params (characteristics and metric)
     DEBT_CHARACTERISTICS = (
@@ -94,9 +101,11 @@ class SonarAPIHandler(object):
         :return: response
         """
         # Get method and make the call
-        call = getattr(self._session, method.lower())
         url = self._get_url(endpoint)
-        res = call(url, data=data or {})
+        if method.lower() == 'get':
+            res = self._session.get(url, params=data or {})
+        else:
+            res = self._session.post(url, data=data or {})
 
         # Analyse response status and return or raise exception
         # Note: redirects are followed automatically by requests
@@ -463,4 +472,162 @@ class SonarAPIHandler(object):
 
         # Make call and return response
         res = self._make_call('post', self.USERS_DEACTIVATE_ENDPOINT, **params)
+        return res
+
+    def get_groups(self, fields=None, query=None):
+        """
+        Search for user groups
+
+        :param fields: Comma-separated list of the fields to be returned in response.
+        :param query: Limit search to names that contain the supplied string.
+        :return: request response
+        """
+
+        # Build parameters
+        params = {}
+
+        if fields:
+            params['f'] = fields
+        if query:
+            params['q'] = query
+
+        # Make call and return response
+        res = self._make_call('get', self.GROUPS_LIST_ENDPOINT, **params)
+        return res
+
+    def create_group(self, name, description=None):
+        """
+        Create a group
+
+        :param name: name for the new group
+        :param description: description for the new group
+        :return: request response
+        """
+
+        # Build parameters
+        params = {
+            'name': name
+        }
+
+        if description:
+            params['description'] = description
+
+        # Make call and return response
+        res = self._make_call('post', self.GROUPS_CREATE_ENDPOINT, **params)
+        return res
+
+    def update_group(self, gid, name=None, description=None):
+        """
+        Update a group
+
+        :param gid: group id
+        :param name: new name for the group
+        :param description: new description for the group
+        :return:
+        """
+
+        # Build parameters
+        params = {
+            'id': gid
+        }
+
+        if name:
+            params['name'] = name
+        if description:
+            params['description'] = description
+
+        # Make call and return response
+        res = self._make_call('post', self.GROUPS_UPDATE_ENDPOINT, **params)
+        return res
+
+    def delete_group(self, gid=None, name=None):
+        """
+        Delete a group
+
+        :param gid: group id
+        :param name: group name
+        :return: request response
+        """
+
+        # Build parameters
+        if gid:
+            params = {'id': gid}
+        elif name:
+            params = {'name': name}
+        else:
+            raise ValidationError("Group id or name must be provided")
+
+        # Make call and return response
+        res = self._make_call('post', self.GROUPS_DELETE_ENDPOINT, **params)
+        return res
+
+    def add_user_group(self, login, gid=None, name=None):
+        """
+        Add a user to a group
+
+        :param login: user login
+        :param gid: group id
+        :param name: group name
+        :return: request response
+        """
+
+        # Build parameters
+        if gid:
+            params = {'id': gid}
+        elif name:
+            params = {'name': name}
+        else:
+            raise ValidationError("Group id or name must be provided")
+        params['login'] = login
+
+        # Make call and return response
+        res = self._make_call('post', self.GROUPS_ADDUSER_ENDPOINT, **params)
+        return res
+
+    def remove_user_group(self, login, gid=None, name=None):
+        """
+        Remove a user from a group.
+
+        :param login: user login
+        :param gid: group id
+        :param name: group name
+        :return: request response
+        """
+
+        # Build parameters
+        if gid:
+            params = {'id': gid}
+        elif name:
+            params = {'name': name}
+        else:
+            raise ValidationError("Group id or name must be provided")
+        params['login'] = login
+
+        # Make call and return response
+        res = self._make_call('post', self.GROUPS_REMOVEUSER_ENDPOINT, **params)
+        return res
+
+    def get_group_users(self, gid=None, name=None, query=None):
+        """
+        Search for users with membership information with respect to a group.
+
+        :param gid: group id
+        :param name: group name
+        :param query: limit search to names or logins that contain the supplied string
+        :return: request response
+        """
+
+        # Build parameters
+        if gid:
+            params = {'id': gid}
+        elif name:
+            params = {'name': name}
+        else:
+            raise ValidationError("Group id or name must be provided")
+
+        if query:
+            params['q'] = query
+
+        # Make call and return response
+        res = self._make_call('get', self.GROUPS_USERS_ENDPOINT, **params)
         return res

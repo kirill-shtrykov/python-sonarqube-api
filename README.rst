@@ -81,6 +81,12 @@ The methods supported by the SonarAPIHandler are:
 * ``create_user``: create a user
 * ``update_user``: update a user
 * ``deactivate_user``: deactivate a user
+* ``create_group``: create a group
+* ``update_group``: update a group
+* ``delete_group``: delete a group
+* ``add_user_group``: add a user to a group
+* ``remove_user_group``: remove a user from a group
+* ``get_group_users``: search for users with membership information with respect to a group
 
 Commands
 --------
@@ -162,3 +168,15 @@ The command ``sonarqube-users`` manages a users. Supports following calls:
 * ``create``: create a user
 * ``update``: update a user
 * ``deactivate``: deactivate a user
+
+Manage Groups
+~~~~~~~~~~~~~
+
+The command ``sonarqube-groups`` manages a groups. Supports following calls:
+* ``list``: search for user groups
+* ``create``: create a group
+* ``update``: update a group
+* ``delete``: delete a group
+* ``add-user``: add a user to a group
+* ``remove-user``: remove a user from a group
+* ``list-users``: list users in a group
